@@ -10,12 +10,8 @@ int angle;       // Variable to store the servo angle (0 to 90 degrees)
 
 void setup()
 {
-  servo1.attach(9);   // Servo 1 connected to pin 9
-  servo2.attach(10);  // Servo 2 connected to pin 10
-  Serial.begin(9600); // Initialize serial communication for debugging
-  Serial.println("Servo Control Initialized");
-  Serial.println("Potentiometer Value: ");
-  Serial.println(potValue);
+  servo1.attach(9);  // Servo 1 connected to pin 9
+  servo2.attach(10); // Servo 2 connected to pin 10
 }
 
 void loop()
@@ -23,8 +19,8 @@ void loop()
   potValue = analogRead(potPin);         // Read the potentiometer value
   angle = map(potValue, 0, 1023, 0, 90); // Map the value to a range of 0 to 90 degrees
 
-  Serial.println("Potentiometer Value: ");
-  Serial.print(potValue);
+  servo1.write(angle);      // Rotate servo 1 to the calculated angle
+  servo2.write(90 - angle); // Rotate servo 2 to the opposite angle
 
-  delay(20); // Short delay to allow the servos to reach the desired angle
+  delay(2000); // Short delay to allow the servos to reach the desired angle
 }
