@@ -1,30 +1,62 @@
 #include <Arduino.h>
 #include <Servo.h>
+#include <LiquidCrystal.h>
 
 Servo servo1;
 Servo servo2;
+LiquidCrystal display(2, 3, 4, 5, 6, 7);
 
-int potPin = A0; // Analog pin connected to the potentiometer
-int potValue;    // Variable to store the potentiometer value (0 to 1023)
-int angle;       // Variable to store the servo angle (0 to 90 degrees)
+int potPin = A5;
+int potValue;
+int angle;
+int prevAngle = 90;
+int ledPin = 2;
+
+const int numReadings = 10;
+int readings[numReadings];
+int readIndex = 0;
+int total = 0;
+int smoothedValue = 0;
 
 void setup()
 {
-  servo1.attach(9);   // Servo 1 connected to pin 9
-  servo2.attach(10);  // Servo 2 connected to pin 10
-  Serial.begin(9600); // Initialize serial communication for debugging
-  Serial.println("Servo Control Initialized");
-  Serial.println("Potentiometer Value: ");
-  Serial.println(potValue);
+    servo1.attach(9);
+    servo2.attach(10);
+    pinMode(ledPin, OUTPUT);
+    Serial.begin(9600);
 }
 
 void loop()
 {
-  potValue = analogRead(potPin);         // Read the potentiometer value
-  angle = map(potValue, 0, 1023, 0, 90); // Map the value to a range of 0 to 90 degrees
+    potValue = analogRead(potPin);
 
-  Serial.println("Potentiometer Value: ");
-  Serial.print(potValue);
+    // Subtract the oldest reading. Read and add the new value. Advance to the next index.
+    total -= readings[readIndex];
+    readings[readIndex] = analogRead(potPin);
+    total += readings[readIndex];
+    readIndex = (readIndex + 1) % numReadings;
 
-  delay(20); // Short delay to allow the servos to reach the desired angle
+    smoothedValue = total / numReadings;
+    angle = map(smoothedValue, 0, 1023, 0, 180);
+
+    servo1.write(angle);
+    servo2.write(180 - angle);
+
+    if ((angle / 30 != prevAngle / 30) || (angle < 10 || angle > 165))
+    {
+        digitalWrite(ledPin, HIGH);
+        delay(100);
+        prevAngle = angle;
+    }
+    else
+    {
+        digitalWrite(ledPin, LOW); // Turn LED off
+    }
+
+    Serial.print("Potentiometer Value: ");
+    Serial.print(potValue);
+    Serial.print(" | Angle: ");
+    Serial.println(angle);
+
+    delay(20);
 }
